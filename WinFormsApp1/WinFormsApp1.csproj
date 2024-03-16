@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="3.13.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Victoria">
+      <HintPath>..\..\ConsoleApp1\Victoria.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
