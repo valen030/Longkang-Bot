@@ -16,9 +16,7 @@ namespace WinFormsApp1
     internal static class Program
     {
         private static DiscordSocketClient? _client;
-#pragma warning disable CS0649 // Field 'Program.Context' is never assigned to, and will always have its default value null
         private static SocketCommandContext? Context;
-#pragma warning restore CS0649 // Field 'Program.Context' is never assigned to, and will always have its default value null
         public static string mssg = "";
         /// <summary>
         ///  The main entry point for the application.
