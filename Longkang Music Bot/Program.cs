@@ -10,14 +10,18 @@ using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
 using Discord.Audio;
+using LKGMusicBot.MainEntry;
 
 namespace LKGMusicBot
 {
     internal static class Program
     {
-        private static DiscordSocketClient? _client;
-        private static SocketCommandContext? Context;
-        public static string mssg = "";
+        /// <summary>
+        /// Create a mutex for a single instance.
+        /// </summary>
+        private static Mutex INSTANCE_MUTEX = new Mutex(true, "LongkangGang_DiscordMusicBot");
+        private static MusicBot BOT = new MusicBot();
+        public static FormMain MainEntry = new FormMain(BOT);
 
         /// <summary>
         ///  The main entry point for the application.
@@ -25,106 +29,31 @@ namespace LKGMusicBot
         [STAThread]
         static void Main()
         {
-            _ = MainAsync();
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new FormMain());
-        }
-
-        private static Task Log(LogMessage msg)
-        {
-            Console.WriteLine(msg.ToString());
-            return Task.CompletedTask;
-        }
-
-        public static async Task MainAsync()
-        {
-            _client = new DiscordSocketClient();
-
-            _client.Log += Log;
-
-            //  You can assign your bot token to a string, and pass that in to connect.
-            //  This is, however, insecure, particularly if you plan to have your code hosted in a public repository.
-            var token = "MTAwMzkyODkzNzg3NDg2NjI1OA.GiIYRV.5Ft0Hx_4UnBgRQ2DPCmbtfdVN1skEN0Qoy9Wqk";
-
-            // Some alternative options would be to keep your token in an Environment Variable or a standalone file.
-            // var token = Environment.GetEnvironmentVariable("NameOfYourEnvironmentVariable");
-            // var token = File.ReadAllText("token.txt");
-            // var token = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json")).Token;
-
-            await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();
-
-            // Block this task until the program is closed.
-            await Task.Delay(-1);
-        }
-
-        public class CommandHandler
-        {
-            private readonly DiscordSocketClient _client;
-            private readonly CommandService _commands;
-
-            // Retrieve client and CommandService instance via ctor
-            public CommandHandler(DiscordSocketClient client, CommandService commands)
+            // Check if an instance is already running. Remove this block if you want to run multiple instances.
+            if (!INSTANCE_MUTEX.WaitOne(TimeSpan.Zero, false))
             {
-                _commands = commands;
-                _client = client;
+                MessageBox.Show("The application is already running.");
+                return;
             }
 
-            public async Task InstallCommandsAsync()
-            {
-                // Hook the MessageReceived event into our command handler
-                _client.MessageReceived += HandleCommandAsync;
+            var success = Server.ServerStartup();
 
-                // Here we discover all of the command modules in the entry 
-                // assembly and load them. Starting from Discord.NET 2.0, a
-                // service provider is required to be passed into the
-                // module registration method to inject the 
-                // required dependencies.
-                //
-                // If you do not use Dependency Injection, pass null.
-                // See Dependency Injection guide for more information.
-                await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
-                                                services: null);
+            if (!success)
+                return;
+
+            try 
+            { 
+                Application.Run(MainEntry); 
             }
-
-            private async Task HandleCommandAsync(SocketMessage messageParam)
-            {
-                // Don't process the command if it was a system message
-                var message = messageParam as SocketUserMessage;
-                if (message == null) return;
-
-                // Create a number to track where the prefix ends and the command begins
-                int argPos = 0;
-
-                // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-                if (!(message.HasCharPrefix('!', ref argPos) ||
-                    message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
-                    message.Author.IsBot)
-                    return;
-
-                // Create a WebSocket-based command context based on the message
-                var context = new SocketCommandContext(_client, message);
-                Console.WriteLine("testingg");
-                // Execute the command with the command context we just
-                // created, along with the service provider for precondition checks.
-                await _commands.ExecuteAsync(
-                    context: context,
-                    argPos: argPos,
-                    services: null);
+            catch 
+            { 
+                Console.WriteLine("Failed to run."); 
             }
         }
-        [Command("join", RunMode = RunMode.Async)]
-        public static async Task JoinChannel(IVoiceChannel? channel = null)
-        {
-            // Get the audio channel
-            channel = channel ?? (Context.User as IGuildUser)?.VoiceChannel;
-            if (channel == null) { await Context.Channel.SendMessageAsync("User must be in a voice channel, or a voice channel must be passed as an argument."); return; }
 
-            // For the next step with transmitting audio, you would want to pass this Audio Client in to a service.
-            var audioClient = await channel.ConnectAsync();
-
-        }
+        // Connect to the bot, or cancel before the connection happens.
+        public static void Run() => Task.Run(() => BOT.RunAsync());
+        public static void Cancel() => Task.Run(() => BOT.CancelAsync());
+        public static void Stop() => Task.Run(() => BOT.StopAsync());
     }
 }
