@@ -11,13 +11,14 @@ using System.Text;
 using System.Collections.Generic;
 using Discord.Audio;
 
-namespace WinFormsApp1
+namespace LKGMusicBot
 {
     internal static class Program
     {
         private static DiscordSocketClient? _client;
         private static SocketCommandContext? Context;
         public static string mssg = "";
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
@@ -28,7 +29,7 @@ namespace WinFormsApp1
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
+            Application.Run(new FormMain());
         }
 
         private static Task Log(LogMessage msg)
@@ -36,6 +37,7 @@ namespace WinFormsApp1
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
         }
+
         public static async Task MainAsync()
         {
             _client = new DiscordSocketClient();
