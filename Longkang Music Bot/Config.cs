@@ -16,17 +16,22 @@ namespace LKGMusicBot
 
     public class Config
     {
-        private static ConfigModel myConfig;
+        private ConfigModel _configModel;
 
-        public static ConfigModel Instance { get { return myConfig; } }
+        public ConfigModel Instance { get { return _configModel; } }
 
-        public static void GetOrCreate()
+        public Config()
         {
-            myConfig = new ConfigModel
+            _configModel = new ConfigModel
             {
                 DiscordToken = "MTAwMzkyODkzNzg3NDg2NjI1OA.GiIYRV.5Ft0Hx_4UnBgRQ2DPCmbtfdVN1skEN0Qoy9Wqk",
                 Prefix = '!'
             };
+        }
+
+        public static Config GetOrCreate()
+        {
+            return new Config();
         }
     }
 }

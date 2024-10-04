@@ -28,12 +28,57 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form1";
+            btnStart = new Button();
+            lblStatusString = new Label();
+            lblStatus = new Label();
+            SuspendLayout();
+            // 
+            // btnStart
+            // 
+            btnStart.Location = new Point(147, 81);
+            btnStart.Name = "btnStart";
+            btnStart.Size = new Size(75, 23);
+            btnStart.TabIndex = 0;
+            btnStart.Text = "Start";
+            btnStart.UseVisualStyleBackColor = true;
+            btnStart.Click += btnStart_Click;
+            // 
+            // lblStatusString
+            // 
+            lblStatusString.AutoSize = true;
+            lblStatusString.Location = new Point(12, 9);
+            lblStatusString.Name = "lblStatusString";
+            lblStatusString.Size = new Size(48, 15);
+            lblStatusString.TabIndex = 1;
+            lblStatusString.Text = "Status : ";
+            // 
+            // lblStatus
+            // 
+            lblStatus.AutoSize = true;
+            lblStatus.Location = new Point(66, 9);
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new Size(79, 15);
+            lblStatus.TabIndex = 2;
+            lblStatus.Text = "Disconnected";
+            // 
+            // FormMain
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(367, 116);
+            Controls.Add(lblStatus);
+            Controls.Add(lblStatusString);
+            Controls.Add(btnStart);
+            Name = "FormMain";
+            Text = "LKG Music Bot";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
+
+        private Button btnStart;
+        private Label lblStatusString;
+        private Label lblStatus;
     }
 }

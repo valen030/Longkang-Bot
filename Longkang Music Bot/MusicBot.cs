@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Victoria;
 
 namespace LKGMusicBot
 {
@@ -47,6 +48,7 @@ namespace LKGMusicBot
         private DiscordSocketClient m_Client;       // Discord client.
         private CommandService m_Commands;          // Command service to link modules.
         private IServiceProvider m_Services;        // Service provider to add services to these modules.
+        private Config _config;
 
         private string m_ConfigFile = "config.json";// Configuration filename.
         private bool m_Running = false;             // Flag for checking if it's running.
@@ -97,7 +99,10 @@ namespace LKGMusicBot
         /// <returns></returns>
         public bool GetDesktopNotifications() { return m_DesktopNotifications; }
 
-        // Starts the async loop.
+        /// <summary>
+        /// Starts the async loop.
+        /// </summary>
+        /// <returns></returns>
         public async Task RunAsync()
         {
             // Already running...
@@ -109,7 +114,7 @@ namespace LKGMusicBot
             }
 
             // Read configuration
-            Config.GetOrCreate();
+            _config = Config.GetOrCreate();
 
             // Start to make the connection to the server
             m_Client = new DiscordSocketClient();
@@ -128,7 +133,7 @@ namespace LKGMusicBot
                     SetConnectionStatus("Connecting");
 
                     // Login using the bot token.
-                    await m_Client.LoginAsync(TokenType.Bot, Config.Instance.DiscordToken);
+                    await m_Client.LoginAsync(TokenType.Bot, _config.Instance.DiscordToken);
 
                     // Startup the client.
                     await m_Client.StartAsync();
@@ -193,7 +198,7 @@ namespace LKGMusicBot
         {
             var services = new ServiceCollection();
 
-            //services.AddSingleton<AudioService>();      // AudioModule      : AudioService
+            services.AddLavaNode().AddSingleton<AudioService>();
 
             return services.BuildServiceProvider();
         }
@@ -231,7 +236,7 @@ namespace LKGMusicBot
             int argPos = 0;
 
             // Determine if the message is a command, based on if it starts with the prefix char or a mention prefix
-            if (!(message.HasCharPrefix(Config.Instance.Prefix, ref argPos) || message.HasMentionPrefix(m_Client.CurrentUser, ref argPos)))
+            if (!(message.HasCharPrefix(_config.Instance.Prefix, ref argPos) || message.HasMentionPrefix(m_Client.CurrentUser, ref argPos)))
             {
                 // If it isn't a command, decide what to do with it here. 
                 // TODO: Add any special handlers here.
@@ -251,7 +256,7 @@ namespace LKGMusicBot
         // This sets the bots status as default. Can easily be changed. 
         private async Task Ready()
         {
-            await m_Client.SetGameAsync($"Type {Config.Instance.Prefix}help for help!");
+            await m_Client.SetGameAsync($"Type {_config.Instance.Prefix}help for help!");
         }
 
         /// <summary>
@@ -264,28 +269,6 @@ namespace LKGMusicBot
             Console.WriteLine(msg.ToString());
             if (Program.MainEntry != null) Program.MainEntry.SetConsoleText(msg.ToString());
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// This function is called once a user joins the server.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        private async Task UserJoined(SocketGuildUser user)
-        {
-            var channel = user.Guild.DefaultChannel;  // You can add references to any channel you wish
-            await channel.SendMessageAsync("Welcome to the Discord server" + user.Mention + "! Feel free to ask around if you need help!");
-        }
-
-        /// <summary>
-        /// This function is called once a user joins the server. 
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        private async Task UserLeft(SocketGuildUser user)
-        {
-            var channel = user.Guild.DefaultChannel; // You can add references to any channel you wish
-            await channel.SendMessageAsync(user.Mention + " has left the Discord server.");
         }
     }
 }
