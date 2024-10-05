@@ -117,7 +117,10 @@ namespace LKGMusicBot
             _config = Config.GetOrCreate();
 
             // Start to make the connection to the server
-            m_Client = new DiscordSocketClient();
+            var discordConfig = new DiscordSocketConfig();
+            discordConfig.GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent;
+
+            m_Client = new DiscordSocketClient(discordConfig);
             m_Commands = new CommandService(); // Start the command service to add all our commands. See 'InstallCommands'
             m_Services = InstallServices(); // We install services by adding it to a service collection.
             m_RetryConnection = true; // Always set reconnect to true. Set this to false when we cancel the connection.
