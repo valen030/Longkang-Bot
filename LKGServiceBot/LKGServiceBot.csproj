@@ -19,4 +19,13 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="Victoria" Version="7.0.5" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Server\application.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Server\Lavalink.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

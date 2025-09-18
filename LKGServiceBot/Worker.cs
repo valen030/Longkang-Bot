@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using LKGMusicBot;
 using System.Net;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -29,17 +30,16 @@ namespace LKGServiceBot
             _lavaNode = lavaNode;
         }
 
-        private async void Test()
-        {
-            var addrs = await Dns.GetHostAddressesAsync("discord.com");
-            Console.WriteLine("Resolved: " + string.Join(", ", addrs.Select(a => a.ToString())));
-        }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Test();
             try
             {
+                if (!await Server.ServerStartup())
+                {
+                    _logger.LogInformation("Lavalink Server failed to startup.");
+                    return;
+                }
+
                 if (_discordClient.ConnectionState == ConnectionState.Connecting || _discordClient.ConnectionState == ConnectionState.Connected)
                 {
                     _logger.LogInformation($"Bot is already connecting or connected.");
@@ -69,6 +69,8 @@ namespace LKGServiceBot
             {
                 _logger.LogInformation("Stopping Discord client...");
                 await _discordClient.StopAsync();
+                Server.ServerShutdown();
+                _logger.LogInformation("Stopping Server...");
             }
         }
 
