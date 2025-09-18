@@ -67,10 +67,19 @@ namespace LKGServiceBot
             }
             finally
             {
-                _logger.LogInformation("Stopping Discord client...");
-                await _discordClient.StopAsync();
-                Server.ServerShutdown();
-                _logger.LogInformation("Stopping Server...");
+                try
+                {
+                    _logger.LogInformation("Stopping Server...");
+                    Server.ServerShutdown();
+
+                    _logger.LogInformation("Stopping Discord client...");
+                    if (_discordClient.ConnectionState == ConnectionState.Connected)
+                    {
+                        await _discordClient.LogoutAsync();
+                        await _discordClient.StopAsync();
+                    }
+                }
+                catch { }
             }
         }
 

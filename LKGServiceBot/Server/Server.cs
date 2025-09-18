@@ -45,7 +45,8 @@ namespace LKGMusicBot
             client.DefaultRequestHeaders.Add("Authorization", "youshallnotpass");
 
             var url = "http://localhost:2333/version";
-            for (int i = 0; i < 60; i++) // up to 30s
+
+            while (true) 
             {
                 try
                 {
@@ -67,9 +68,6 @@ namespace LKGMusicBot
 
                 await Task.Delay(1000);
             }
-
-            Console.WriteLine("Lavalink did not respond in time.");
-            return false;
         }
 
         public static void ServerShutdown()
@@ -81,7 +79,7 @@ namespace LKGMusicBot
                     var process = Process.GetProcessById(_taskID);
                     if (!process.HasExited)
                     {
-                        process.Kill();
+                        process.Kill(true);
                         process.WaitForExit();
                         Console.WriteLine("Lavalink process terminated.");
                     }
