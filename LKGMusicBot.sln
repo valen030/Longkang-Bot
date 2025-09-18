@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34701.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LKGMusicBot", "Longkang Music Bot\LKGMusicBot.csproj", "{A55C20FD-0AF2-4CE6-AACD-33CB41074FA6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LKGServiceBot", "LKGServiceBot\LKGServiceBot.csproj", "{11055E79-8AE7-45DD-92F5-A5A6A063E352}"
 EndProject
 Global
@@ -13,10 +11,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A55C20FD-0AF2-4CE6-AACD-33CB41074FA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A55C20FD-0AF2-4CE6-AACD-33CB41074FA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A55C20FD-0AF2-4CE6-AACD-33CB41074FA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A55C20FD-0AF2-4CE6-AACD-33CB41074FA6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{11055E79-8AE7-45DD-92F5-A5A6A063E352}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{11055E79-8AE7-45DD-92F5-A5A6A063E352}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11055E79-8AE7-45DD-92F5-A5A6A063E352}.Release|Any CPU.ActiveCfg = Release|Any CPU
