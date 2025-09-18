@@ -5,3 +5,7 @@ java -jar Lavalink.jar
 
 netstat -ano | findstr :8080
 taskkill /F /PID 12224
+
+curl.exe --resolve discord.com:443:162.159.136.232 -vk https://discord.com/api/v10/gateway
+
+C:\Windows\System32\drivers\etc\hosts
