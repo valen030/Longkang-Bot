@@ -26,7 +26,7 @@ lavalink:
       youtube: false
       bandcamp: true
       soundcloud: true
-      twitch: true
+      twitch: false
       vimeo: true
       nico: true
       http: true # warning: keeping HTTP enabled without a proxy configured could expose your server's IP address.
@@ -81,7 +81,7 @@ plugins:
             youtube: true
         providers:
             - ytsearch:"%ISRC%"
-            - ytmsearch:"%ISRC%"
+            - ytsearch:"%QUERY%"
         sources:
             applemusic: false
             bandcamp: false
@@ -157,7 +157,7 @@ plugins:
         enabled: true
         oauth:
             enabled: true
-            refreshToken:
+            refreshToken: 
             skipInitialization: false
 
 logging:
