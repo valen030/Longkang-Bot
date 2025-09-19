@@ -8,8 +8,9 @@ namespace LKGMusicBot
         public const string run_Command = "java -jar Lavalink.jar";
 
         private static int _taskID = 0;
+        public static bool IsServerForcedToStop = false;
 
-        public static async Task<bool> ServerStartup()
+        public static async Task<bool> ServerStartup(CancellationToken stoppingToken)
         {
             var currentDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Server");
 
@@ -61,6 +62,13 @@ namespace LKGMusicBot
             {
                 try
                 {
+                    if (stoppingToken.IsCancellationRequested)
+                    {
+                        IsServerForcedToStop = true;
+                        Console.WriteLine("Cancellation requested, stopping Lavalink startup.");
+                        return false;
+                    }
+
                     var response = await client.GetAsync(url);
                     if (response.IsSuccessStatusCode)
                     {

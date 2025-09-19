@@ -34,7 +34,7 @@ namespace LKGServiceBot
         {
             try
             {
-                if (!await Server.ServerStartup())
+                if (!await Server.ServerStartup(stoppingToken))
                 {
                     _logger.LogInformation("Lavalink Server failed to startup.");
                     return;
@@ -69,22 +69,29 @@ namespace LKGServiceBot
             {
                 try
                 {
-                    if (_lavaNode.IsConnected)
+                    if (Server.IsServerForcedToStop)
                     {
-                        await _lavaNode.DisconnectAsync();
+                        _logger.LogInformation("Server failed to startup and was forced to stop, skipping shutdown sequence.");
                     }
-
-                    _logger.LogInformation("Stopping Discord client...");
-                    if (_discordClient.ConnectionState == ConnectionState.Connected)
+                    else
                     {
-                        await _discordClient.LogoutAsync();
-                        await _discordClient.StopAsync();
-                    }
-                    _logger.LogInformation("Discord client stopped.");
+                        if (_lavaNode.IsConnected)
+                        {
+                            await _lavaNode.DisconnectAsync();
+                        }
 
-                    _logger.LogInformation("Stopping Server...");
-                    Server.ServerShutdown();
-                    _logger.LogInformation("Server Stopped.");
+                        _logger.LogInformation("Stopping Discord client...");
+                        if (_discordClient.ConnectionState == ConnectionState.Connected)
+                        {
+                            await _discordClient.LogoutAsync();
+                            await _discordClient.StopAsync();
+                        }
+                        _logger.LogInformation("Discord client stopped.");
+
+                        _logger.LogInformation("Stopping Server...");
+                        Server.ServerShutdown();
+                        _logger.LogInformation("Server Stopped.");
+                    }
                 }
                 catch { }
             }
