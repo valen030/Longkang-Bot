@@ -271,7 +271,6 @@ public sealed class AudioModule(
                 sb.Append(line);
             }
 
-            // send remaining content
             if (sb.Length > 0)
                 await ReplyAsync(sb.ToString());
         }
