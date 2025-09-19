@@ -76,7 +76,12 @@ public sealed class AudioModule(
                 await ReplyAsync(exception.Message);
             }
         }
-        
+
+        if (!Uri.IsWellFormedUriString(searchQuery, UriKind.Absolute))
+        {
+            searchQuery = $"ytsearch:{searchQuery}";
+        }
+
         var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
         if (searchResponse.Type is SearchType.Empty or SearchType.Error) {
             await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.");
