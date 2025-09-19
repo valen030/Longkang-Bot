@@ -69,8 +69,10 @@ namespace LKGServiceBot
             {
                 try
                 {
-                    _logger.LogInformation("Stopping Server...");
-                    Server.ServerShutdown();
+                    if (_lavaNode.IsConnected)
+                    {
+                        await _lavaNode.DisconnectAsync();
+                    }
 
                     _logger.LogInformation("Stopping Discord client...");
                     if (_discordClient.ConnectionState == ConnectionState.Connected)
@@ -78,6 +80,11 @@ namespace LKGServiceBot
                         await _discordClient.LogoutAsync();
                         await _discordClient.StopAsync();
                     }
+                    _logger.LogInformation("Discord client stopped.");
+
+                    _logger.LogInformation("Stopping Server...");
+                    Server.ServerShutdown();
+                    _logger.LogInformation("Server Stopped.");
                 }
                 catch { }
             }

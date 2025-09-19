@@ -27,6 +27,9 @@
     <None Update="Server\Lavalink.jar">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Server\plugins\lavasearch-plugin-1.0.0.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Server\plugins\lavasrc-plugin-4.8.1.jar">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

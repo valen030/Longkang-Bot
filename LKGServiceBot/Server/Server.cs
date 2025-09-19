@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace LKGMusicBot
 {
@@ -21,12 +22,22 @@ namespace LKGMusicBot
             }
 
             var process = new Process();
-            process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = "/C " + run_Command;
             process.StartInfo.WorkingDirectory = currentDirectory;
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = true;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = "/C " + run_Command;
+            }
+            else
+            {
+                // Linux/macOS: just call Java directly
+                process.StartInfo.FileName = "/bin/bash";
+                process.StartInfo.Arguments = "-c \"" + run_Command + "\"";
+            }
 
             process.ErrorDataReceived += (sender, e) =>
             {
