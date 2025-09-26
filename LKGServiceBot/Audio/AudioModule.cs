@@ -14,7 +14,9 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     private static readonly ConcurrentDictionary<ulong, SemaphoreSlim> GuildLocks = new();
 
-    private SemaphoreSlim GetGuildLock(ulong guildId) =>
+    public static readonly Dictionary<ulong, bool> _loopToggles = new();
+
+    private static SemaphoreSlim GetGuildLock(ulong guildId) =>
         GuildLocks.GetOrAdd(guildId, _ => new SemaphoreSlim(1, 1));
 
     /// <summary>
@@ -23,7 +25,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     /// <param name="guildId"></param>
     /// <param name="action"></param>
     /// <returns></returns>
-    private async Task RunWithGuildLockAsync(ulong guildId, Func<Task> action)
+    public static async Task RunWithGuildLockAsync(ulong guildId, Func<Task> action)
     {
         var guildLock = GetGuildLock(guildId);
         await guildLock.WaitAsync();
@@ -102,7 +104,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
         await RunWithGuildLockAsync(Context.Guild.Id, async () => {
             var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (player == null)
+            if (player != null)
             {
                 var voiceState = Context.User as IVoiceState;
                 if (voiceState?.VoiceChannel == null)
@@ -270,7 +272,6 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Stop current song.")]
     public async Task StopAsync()
     {
-
         await RunWithGuildLockAsync(Context.Guild.Id, async () => {
             var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
             if (!player.State.IsConnected || player.Track == null)
@@ -281,7 +282,8 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
             try
             {
-                await player.StopAsync(lavaNode, player.Track);
+                await player.StopAsync(lavaNode, player.Track, false, true);
+                await ReplyAsync($"Song { player.Track?.Title } stopped. Now in pausing state...");
             }
             catch (Exception exception)
             {
@@ -299,13 +301,17 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
             if (!player.State.IsConnected)
             {
-                await ReplyAsync("Woaaah there, I can't skip when nothing is playing.");
+                await ReplyAsync("Please connect to the channel");
                 return;
             }
 
             try
             {
-                var (skipped, currenTrack) = await player.SkipAsync(lavaNode);
+                var currentTrack = player.Track;
+                if (currentTrack != null)
+                    await ReplyAsync($"Current song {currentTrack.Title} has been skipped.");
+
+                await player.StopAsync(lavaNode, player.Track, false, false);
             }
             catch (Exception exception)
             {
@@ -404,6 +410,36 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             {
                 var queue = player.GetQueue();
                 queue.Clear();
+            }
+        });
+    }
+
+    [Command("Loop")]
+    [Summary(text: "Loop current song.")]
+    public async Task LoopAsync()
+    {
+        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player != null)
+            {
+                var voiceState = Context.User as IVoiceState;
+                if (voiceState?.VoiceChannel == null)
+                {
+                    await ReplyAsync("You must be connected to a voice channel!");
+                    return;
+                }
+
+                try
+                {
+                    var guildId = Context.Guild.Id;
+                    _loopToggles[guildId] = !_loopToggles.GetValueOrDefault(guildId, false);
+
+                    await ReplyAsync(_loopToggles[guildId] ? "Loop enabled." : "Loop disabled.");
+                }
+                catch (Exception exception)
+                {
+                    await ReplyAsync("Failed to loop. REason : " + exception.Message);
+                }
             }
         });
     }
