@@ -65,9 +65,6 @@ namespace LKGServiceBot.Audio
 
         private Task OnTrackEndAsync(TrackEndEventArg arg)
         {
-            if (arg.Reason == Victoria.Enums.TrackEndReason.Replaced)
-                return Task.CompletedTask;
-
             return SendAndLogMessageAsync(arg.GuildId, $"{arg.Track.Title} ended with reason: {arg.Reason}");
         }
 
