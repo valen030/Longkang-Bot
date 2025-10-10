@@ -370,4 +370,36 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             await ReplyAsync("Queue cleared");
         }
     }
+
+    [Command("Loop")]
+    [Alias("loop", "LOOP", "Loop")]
+    [Summary(text: "Loop current track.")]
+    public async Task LoopAsync()
+    {
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (player == null)
+        {
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null)
+            {
+                await ReplyAsync("You must be connected to a voice channel!");
+                return;
+            }
+
+            try
+            {
+                player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
+                await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+                audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        var isLoop = !await AudioService.IsLoopAsync(Context.Guild.Id);
+        await AudioService.ToggleLoopAsync(Context.Guild.Id);
+        await ReplyAsync($"Loop is {(isLoop ? "enabled" : "disabled")}");
+    }
 }

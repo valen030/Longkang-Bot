@@ -1,8 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using System.Collections.Concurrent;
+using System.Numerics;
 using System.Text.Json;
 using Victoria;
+using Victoria.Rest.Search;
 using Victoria.WebSocket.EventArgs;
 
 namespace LKGServiceBot.Audio
@@ -15,6 +17,7 @@ namespace LKGServiceBot.Audio
         public readonly HashSet<ulong> VoteQueue;
         private readonly ConcurrentDictionary<ulong, CancellationTokenSource> _disconnectTokens;
         public readonly ConcurrentDictionary<ulong, ulong> TextChannels;
+        public static readonly ConcurrentDictionary<ulong, bool> GuildLoop = new();
 
         public AudioService(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaNode,
             DiscordSocketClient socketClient,
@@ -49,15 +52,22 @@ namespace LKGServiceBot.Audio
         {
             try
             {
-                // check all connected players
                 var players = await _lavaNode.GetPlayersAsync();
-                foreach (var player in players)
+                var player = players.FirstOrDefault(p => p.GuildId == arg.GuildId);
+                var isLoop = await IsLoopAsync(player.GuildId);
+
+                if (isLoop)
                 {
-                    // if nothing is playing but queue has items
-                    if (player.GetQueue().Count > 0 && player.Track == null)
-                    {
-                        await player.SkipAsync(_lavaNode, TimeSpan.FromSeconds(1));
-                    }
+                    // Replay the same track
+                    var searchResponse = await _lavaNode.LoadTrackAsync(arg.Track.Url);
+                    var newTrack = searchResponse.Tracks.FirstOrDefault();
+                    await player.PlayAsync(_lavaNode, newTrack);
+                }
+
+                // if nothing is playing but queue has items
+                if (player.GetQueue().Count > 0 && player.Track == null)
+                {
+                    await player.SkipAsync(_lavaNode, TimeSpan.FromSeconds(1));
                 }
             }
             catch
@@ -99,5 +109,34 @@ namespace LKGServiceBot.Audio
                     .GetChannel(textChannelId) as ITextChannel)
                 .SendMessageAsync(message);
         }
+
+        #region Loop Management
+
+        /// <summary>
+        /// Toggles loop for a guild asynchronously:
+        /// - If no record exists, adds it with true
+        /// - If record exists, toggles its value
+        /// Returns the new state
+        /// </summary>
+        public static Task<bool> ToggleLoopAsync(ulong guildId)
+        {
+            return Task.FromResult(
+                GuildLoop.AddOrUpdate(
+                    guildId,
+                    addValue: true,                 // If not found, add with true
+                    updateValueFactory: (key, oldValue) => !oldValue // Toggle current value
+                )
+            );
+        }
+
+        /// <summary>
+        /// Gets current loop state for a guild asynchronously
+        /// </summary>
+        public static Task<bool> IsLoopAsync(ulong guildId)
+        {
+            return Task.FromResult(GuildLoop.TryGetValue(guildId, out var value) && value);
+        }
+
+        #endregion
     }
 }
