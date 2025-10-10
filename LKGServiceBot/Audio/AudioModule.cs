@@ -215,11 +215,16 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             await ReplyAsync("I cannot resume when I'm not playing anything!");
             return;
         }
+        if (player.Track == null)
+        {
+            await ReplyAsync("I cannot resume when I'm not playing anything!");
+            return;
+        }
 
         try
         {
             await player.ResumeAsync(lavaNode, player.Track);
-            await ReplyAsync($"Resumed: {player.Track.Title}");
+            await ReplyAsync($"Track resumed.");
         }
         catch (Exception exception)
         {
@@ -242,6 +247,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
         try
         {
             await player.StopAsync(lavaNode, player.Track);
+            await ReplyAsync("Track stopped.");
         }
         catch (Exception exception)
         {
@@ -263,7 +269,10 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
         try
         {
+            await player.StopAsync(lavaNode, player.Track);  // forcibly ends current track
             var (skipped, currenTrack) = await player.SkipAsync(lavaNode);
+            await player.PlayAsync(lavaNode, currenTrack); // starts the next track
+            await player.ResumeAsync(lavaNode, currenTrack);
         }
         catch (Exception exception)
         {
@@ -358,6 +367,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
         {
             var queue = player.GetQueue();
             queue.Clear();
+            await ReplyAsync("Queue cleared");
         }
     }
 }

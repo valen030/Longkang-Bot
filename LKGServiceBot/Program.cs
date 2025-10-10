@@ -5,6 +5,7 @@ using LKGServiceBot;
 using LKGServiceBot.Audio;
 using System.Net;
 using Victoria;
+using Victoria.WebSocket.Internal;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -23,6 +24,10 @@ builder.Services
         x.Hostname = "127.0.0.1";
         x.Port = 2333;
         x.Authorization = "youshallnotpass";
+        x.SocketConfiguration = new WebSocketConfiguration
+        {
+            BufferSize = 8192
+        };
     })
     .AddSingleton<AudioService>()
     .AddLogging(x =>

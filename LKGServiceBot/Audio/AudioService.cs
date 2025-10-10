@@ -31,52 +31,52 @@ namespace LKGServiceBot.Audio
             _lavaNode.OnPlayerUpdate += OnPlayerUpdateAsync;
             _lavaNode.OnTrackEnd += OnTrackEndAsync;
             _lavaNode.OnTrackStart += OnTrackStartAsync;
-            _ = MonitorPlayersAsync();
         }
 
-        private async Task MonitorPlayersAsync()
+        private async Task OnTrackStartAsync(TrackStartEventArg arg)
         {
-            while (true)
+            var players = await _lavaNode.GetPlayersAsync();
+            var player = players.FirstOrDefault(p => p.GuildId == arg.GuildId);
+
+            // if nothing is playing but queue has items
+            if (player.Track != null && player.GetQueue().Count > 0 && !player.IsPaused)
             {
-                try
-                {
-                    // check all connected players
-                    var players = await _lavaNode.GetPlayersAsync();
-                    foreach (var player in players)
-                    {
-                        // if nothing is playing but queue has items
-                        if (player.Track == null && player.GetQueue().Count > 0)
-                            await player.SkipAsync(_lavaNode);
-                    }
-                }
-                catch
-                {
-                    // ignore errors or log them
-                }
-                await Task.Delay(5000);
+                await SendAndLogMessageAsync(player.GuildId, $"Now playing: {player.Track.Title}");
             }
         }
 
-        private Task OnTrackStartAsync(TrackStartEventArg arg)
+        private async Task OnTrackEndAsync(TrackEndEventArg arg)
         {
-            return SendAndLogMessageAsync(arg.GuildId,
-                $"Now playing: {arg.Track.Title}");
-        }
+            try
+            {
+                // check all connected players
+                var players = await _lavaNode.GetPlayersAsync();
+                foreach (var player in players)
+                {
+                    // if nothing is playing but queue has items
+                    if (player.GetQueue().Count > 0 && player.Track == null)
+                    {
+                        await player.SkipAsync(_lavaNode, TimeSpan.FromSeconds(1));
+                    }
+                }
+            }
+            catch
+            {
+                // ignore errors or log them
+            }
 
-        private Task OnTrackEndAsync(TrackEndEventArg arg)
-        {
-            return SendAndLogMessageAsync(arg.GuildId, $"{arg.Track.Title} ended with reason: {arg.Reason}");
+            return;
         }
 
         private Task OnPlayerUpdateAsync(PlayerUpdateEventArg arg)
         {
-            _logger.LogInformation("Guild latency: {}", arg.Ping);
+            //_logger.LogInformation("Guild latency: {}", arg.Ping);
             return Task.CompletedTask;
         }
 
         private Task OnStatsAsync(StatsEventArg arg)
         {
-            _logger.LogInformation("{}", JsonSerializer.Serialize(arg));
+            //_logger.LogInformation("{}", JsonSerializer.Serialize(arg));
             return Task.CompletedTask;
         }
 
