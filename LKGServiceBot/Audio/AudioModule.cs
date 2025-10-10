@@ -12,56 +12,29 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     private static readonly IEnumerable<int> Range = Enumerable.Range(1900, 2000);
 
-    private static readonly ConcurrentDictionary<ulong, SemaphoreSlim> GuildLocks = new();
-
-    private SemaphoreSlim GetGuildLock(ulong guildId) =>
-        GuildLocks.GetOrAdd(guildId, _ => new SemaphoreSlim(1, 1));
-
-    /// <summary>
-    /// To ensure one command execute at a time per guild/server.
-    /// </summary>
-    /// <param name="guildId"></param>
-    /// <param name="action"></param>
-    /// <returns></returns>
-    private async Task RunWithGuildLockAsync(ulong guildId, Func<Task> action)
-    {
-        var guildLock = GetGuildLock(guildId);
-        await guildLock.WaitAsync();
-        try
-        {
-            await action();
-        }
-        finally
-        {
-            guildLock.Release();
-        }
-    }
-
     [Command("Join")]
     [Alias("j", "JOIN", "Join")]
     [Summary(text: "Join the channel.")]
     public async Task JoinAsync()
     {
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var voiceState = Context.User as IVoiceState;
-            if (voiceState?.VoiceChannel == null)
-            {
-                await ReplyAsync("You must be connected to a voice channel!");
-                return;
-            }
+        var voiceState = Context.User as IVoiceState;
+        if (voiceState?.VoiceChannel == null)
+        {
+            await ReplyAsync("You must be connected to a voice channel!");
+            return;
+        }
 
-            try
-            {
-                await lavaNode.JoinAsync(voiceState.VoiceChannel);
-                await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+        try
+        {
+            await lavaNode.JoinAsync(voiceState.VoiceChannel);
+            await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
 
-                audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
-            }
-            catch (Exception exception)
-            {
-                await ReplyAsync(exception.ToString());
-            }
-        });
+            audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.ToString());
+        }
     }
 
     [Command("Leave")]
@@ -69,24 +42,22 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Leave the channel.")]
     public async Task LeaveAsync()
     {
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var voiceChannel = (Context.User as IVoiceState).VoiceChannel;
-            if (voiceChannel == null)
-            {
-                await ReplyAsync("Not sure which voice channel to disconnect from.");
-                return;
-            }
+        var voiceChannel = (Context.User as IVoiceState).VoiceChannel;
+        if (voiceChannel == null)
+        {
+            await ReplyAsync("Not sure which voice channel to disconnect from.");
+            return;
+        }
 
-            try
-            {
-                await lavaNode.LeaveAsync(voiceChannel);
-                await ReplyAsync($"I've left {voiceChannel.Name}!");
-            }
-            catch (Exception exception)
-            {
-                await ReplyAsync(exception.Message);
-            }
-        });
+        try
+        {
+            await lavaNode.LeaveAsync(voiceChannel);
+            await ReplyAsync($"I've left {voiceChannel.Name}!");
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.Message);
+        }
     }
 
     [Command("Play")]
@@ -100,53 +71,51 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             return;
         }
 
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (player == null)
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (player == null)
+        {
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null)
             {
-                var voiceState = Context.User as IVoiceState;
-                if (voiceState?.VoiceChannel == null)
-                {
-                    await ReplyAsync("You must be connected to a voice channel!");
-                    return;
-                }
-
-                try
-                {
-                    player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
-                    await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
-                    audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
-                }
-                catch (Exception exception)
-                {
-                    await ReplyAsync(exception.Message);
-                }
-            }
-
-            if (!Uri.IsWellFormedUriString(searchQuery, UriKind.Absolute))
-            {
-                searchQuery = $"ytsearch:{searchQuery}";
-            }
-
-            var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
-            if (searchResponse.Type is SearchType.Empty or SearchType.Error)
-            {
-                await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.");
+                await ReplyAsync("You must be connected to a voice channel!");
                 return;
             }
 
-            var track = searchResponse.Tracks.FirstOrDefault();
-            if (player.Track != null)
+            try
             {
-                player.GetQueue().Enqueue(track);
-                await ReplyAsync($"Added {track.Title} to queue.");
+                player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
+                await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+                audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
             }
-            else
+            catch (Exception exception)
             {
-                await player.PlayAsync(lavaNode, track);
-                return;
+                await ReplyAsync(exception.Message);
             }
-        });
+        }
+
+        if (!Uri.IsWellFormedUriString(searchQuery, UriKind.Absolute))
+        {
+            searchQuery = $"ytsearch:{searchQuery}";
+        }
+
+        var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
+        if (searchResponse.Type is SearchType.Empty or SearchType.Error)
+        {
+            await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.");
+            return;
+        }
+
+        var track = searchResponse.Tracks.FirstOrDefault();
+        if (player.Track != null)
+        {
+            player.GetQueue().Enqueue(track);
+            await ReplyAsync($"Added {track.Title} to queue.");
+        }
+        else
+        {
+            await player.PlayAsync(lavaNode, track);
+            return;
+        }
     }
 
     [Command("PlayList")]
@@ -160,58 +129,56 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             return;
         }
 
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (player == null)
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (player == null)
+        {
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null)
             {
-                var voiceState = Context.User as IVoiceState;
-                if (voiceState?.VoiceChannel == null)
-                {
-                    await ReplyAsync("You must be connected to a voice channel!");
-                    return;
-                }
-
-                try
-                {
-                    player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
-                    await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
-                    audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
-                }
-                catch (Exception exception)
-                {
-                    await ReplyAsync(exception.Message);
-                }
-            }
-
-            var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
-            if (searchResponse.Type is SearchType.Empty or SearchType.Error)
-            {
-                await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.");
+                await ReplyAsync("You must be connected to a voice channel!");
                 return;
             }
 
-            var tracks = searchResponse.Tracks;
-            var count = 0;
-
-            await ReplyAsync($"Adding {tracks.Count} song added to the queue.");
-
-            foreach (var track in tracks)
+            try
             {
-                if (player.Track == null)
-                {
-                    await player.PlayAsync(lavaNode, track);
-                    player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id); // refresh the 
-                }
-                else
-                {
-                    // Add to queue
-                    player.GetQueue().Enqueue(track);
-                    count++;
-                }
+                player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
+                await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+                audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
             }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
 
-            await ReplyAsync($"Total {count} song added to the queue.");
-        });
+        var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
+        if (searchResponse.Type is SearchType.Empty or SearchType.Error)
+        {
+            await ReplyAsync($"I wasn't able to find anything for `{searchQuery}`.");
+            return;
+        }
+
+        var tracks = searchResponse.Tracks;
+        var count = 0;
+
+        await ReplyAsync($"Adding {tracks.Count} song added to the queue.");
+
+        foreach (var track in tracks)
+        {
+            if (player.Track == null)
+            {
+                await player.PlayAsync(lavaNode, track);
+                player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id); // refresh the 
+            }
+            else
+            {
+                // Add to queue
+                player.GetQueue().Enqueue(track);
+                count++;
+            }
+        }
+
+        await ReplyAsync($"Total {count} song added to the queue.");
     }
 
     [Command("Pause"), RequirePlayer]
@@ -219,25 +186,22 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Pause current song.")]
     public async Task PauseAsync()
     {
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (player.IsPaused && player.Track != null)
+        {
+            await ReplyAsync("I cannot pause when I'm not playing anything!");
+            return;
+        }
 
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (player.IsPaused && player.Track != null)
-            {
-                await ReplyAsync("I cannot pause when I'm not playing anything!");
-                return;
-            }
-
-            try
-            {
-                await player.PauseAsync(lavaNode);
-                await ReplyAsync($"Paused: {player.Track.Title}");
-            }
-            catch (Exception exception)
-            {
-                await ReplyAsync(exception.Message);
-            }
-        });
+        try
+        {
+            await player.PauseAsync(lavaNode);
+            await ReplyAsync($"Paused: {player.Track.Title}");
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.Message);
+        }
     }
 
     [Command("Resume"), RequirePlayer]
@@ -245,24 +209,22 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Resume current song.")]
     public async Task ResumeAsync()
     {
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (!player.IsPaused && player.Track != null)
-            {
-                await ReplyAsync("I cannot resume when I'm not playing anything!");
-                return;
-            }
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (!player.IsPaused && player.Track != null)
+        {
+            await ReplyAsync("I cannot resume when I'm not playing anything!");
+            return;
+        }
 
-            try
-            {
-                await player.ResumeAsync(lavaNode, player.Track);
-                await ReplyAsync($"Resumed: {player.Track.Title}");
-            }
-            catch (Exception exception)
-            {
-                await ReplyAsync(exception.Message);
-            }
-        });
+        try
+        {
+            await player.ResumeAsync(lavaNode, player.Track);
+            await ReplyAsync($"Resumed: {player.Track.Title}");
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.Message);
+        }
     }
 
     [Command("Stop"), RequirePlayer]
@@ -270,24 +232,21 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Stop current song.")]
     public async Task StopAsync()
     {
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (!player.State.IsConnected || player.Track == null)
+        {
+            await ReplyAsync("Woah, can't stop won't stop.");
+            return;
+        }
 
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (!player.State.IsConnected || player.Track == null)
-            {
-                await ReplyAsync("Woah, can't stop won't stop.");
-                return;
-            }
-
-            try
-            {
-                await player.StopAsync(lavaNode, player.Track);
-            }
-            catch (Exception exception)
-            {
-                await ReplyAsync(exception.Message);
-            }
-        });
+        try
+        {
+            await player.StopAsync(lavaNode, player.Track);
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.Message);
+        }
     }
 
     [Command("Skip"), RequirePlayer]
@@ -295,23 +254,21 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Play next song.")]
     public async Task SkipAsync()
     {
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (!player.State.IsConnected)
-            {
-                await ReplyAsync("Woaaah there, I can't skip when nothing is playing.");
-                return;
-            }
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (!player.State.IsConnected)
+        {
+            await ReplyAsync("Woaaah there, I can't skip when nothing is playing.");
+            return;
+        }
 
-            try
-            {
-                var (skipped, currenTrack) = await player.SkipAsync(lavaNode);
-            }
-            catch (Exception exception)
-            {
-                await ReplyAsync(exception.Message);
-            }
-        });
+        try
+        {
+            var (skipped, currenTrack) = await player.SkipAsync(lavaNode);
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.Message);
+        }
     }
 
     [Command("Queue")]
@@ -319,55 +276,53 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Show the queue.")]
     public async Task QueueAsync()
     {
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (player == null)
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (player == null)
+        {
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null)
             {
-                var voiceState = Context.User as IVoiceState;
-                if (voiceState?.VoiceChannel == null)
-                {
-                    await ReplyAsync("You must be connected to a voice channel!");
-                    return;
-                }
-
-                try
-                {
-                    player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
-                    await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
-                    audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
-                }
-                catch (Exception exception)
-                {
-                    await ReplyAsync(exception.Message);
-                }
+                await ReplyAsync("You must be connected to a voice channel!");
+                return;
             }
 
-            if (player.GetQueue().Count == 0)
-                await ReplyAsync("Nothing in the queue");
-            else
+            try
             {
-                var queueSnapshot = player.GetQueue().ToList(); // make a local copy
-                var maxLength = 2000;
-                var sb = new StringBuilder();
-                int count = 1;
+                player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
+                await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+                audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
+            }
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
 
-                foreach (var item in queueSnapshot)
+        if (player.GetQueue().Count == 0)
+            await ReplyAsync("Nothing in the queue");
+        else
+        {
+            var queueSnapshot = player.GetQueue().ToList(); // make a local copy
+            var maxLength = 2000;
+            var sb = new StringBuilder();
+            int count = 1;
+
+            foreach (var item in queueSnapshot)
+            {
+                string line = $"{count++} - {item.Title}\n";
+
+                if (sb.Length + line.Length > maxLength)
                 {
-                    string line = $"{count++} - {item.Title}\n";
-
-                    if (sb.Length + line.Length > maxLength)
-                    {
-                        await ReplyAsync(sb.ToString());
-                        sb.Clear();
-                    }
-
-                    sb.Append(line);
-                }
-
-                if (sb.Length > 0)
                     await ReplyAsync(sb.ToString());
+                    sb.Clear();
+                }
+
+                sb.Append(line);
             }
-        });
+
+            if (sb.Length > 0)
+                await ReplyAsync(sb.ToString());
+        }
     }
 
     [Command("Clear")]
@@ -375,36 +330,34 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
     [Summary(text: "Clear the queue.")]
     public async Task ClearAsync()
     {
-        await RunWithGuildLockAsync(Context.Guild.Id, async () => {
-            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
-            if (player == null)
+        var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+        if (player == null)
+        {
+            var voiceState = Context.User as IVoiceState;
+            if (voiceState?.VoiceChannel == null)
             {
-                var voiceState = Context.User as IVoiceState;
-                if (voiceState?.VoiceChannel == null)
-                {
-                    await ReplyAsync("You must be connected to a voice channel!");
-                    return;
-                }
-
-                try
-                {
-                    player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
-                    await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
-                    audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
-                }
-                catch (Exception exception)
-                {
-                    await ReplyAsync(exception.Message);
-                }
+                await ReplyAsync("You must be connected to a voice channel!");
+                return;
             }
 
-            if (player.GetQueue().Count == 0)
-                await ReplyAsync("Nothing in the queue");
-            else
+            try
             {
-                var queue = player.GetQueue();
-                queue.Clear();
+                player = await lavaNode.JoinAsync(voiceState.VoiceChannel);
+                await ReplyAsync($"Joined {voiceState.VoiceChannel.Name}!");
+                audioService.TextChannels.TryAdd(Context.Guild.Id, Context.Channel.Id);
             }
-        });
+            catch (Exception exception)
+            {
+                await ReplyAsync(exception.Message);
+            }
+        }
+
+        if (player.GetQueue().Count == 0)
+            await ReplyAsync("Nothing in the queue");
+        else
+        {
+            var queue = player.GetQueue();
+            queue.Clear();
+        }
     }
 }
