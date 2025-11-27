@@ -34,6 +34,8 @@ namespace LKGServiceBot.Audio
             _lavaNode.OnPlayerUpdate += OnPlayerUpdateAsync;
             _lavaNode.OnTrackEnd += OnTrackEndAsync;
             _lavaNode.OnTrackStart += OnTrackStartAsync;
+            _lavaNode.OnTrackException += OnTrackException;
+            _lavaNode.OnTrackStuck += OnTrackStuck;
         }
 
         private async Task OnTrackStartAsync(TrackStartEventArg arg)
@@ -76,6 +78,22 @@ namespace LKGServiceBot.Audio
             }
 
             return;
+        }
+
+        private async Task OnTrackException(TrackExceptionEventArg arg)
+        {
+            var players = await _lavaNode.GetPlayersAsync();
+            var player = players.FirstOrDefault(p => p.GuildId == arg.GuildId);
+
+            await SendAndLogMessageAsync(player.GuildId, $"{arg.Track.Title} throwing an exception. Mssg : {arg.Exception.Message}");
+        }
+
+        private async Task OnTrackStuck(TrackStuckEventArg arg)
+        {
+            var players = await _lavaNode.GetPlayersAsync();
+            var player = players.FirstOrDefault(p => p.GuildId == arg.GuildId);
+
+            await SendAndLogMessageAsync(player.GuildId, $"{arg.Track.Title} was stuck");
         }
 
         private Task OnPlayerUpdateAsync(PlayerUpdateEventArg arg)
