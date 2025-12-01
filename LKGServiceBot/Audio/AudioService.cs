@@ -1,5 +1,8 @@
 ﻿using Discord;
 using Discord.WebSocket;
+
+using LKGServiceBot.Helper;
+
 using System.Collections.Concurrent;
 using System.Numerics;
 using System.Text.Json;
@@ -46,7 +49,8 @@ namespace LKGServiceBot.Audio
             // if nothing is playing but queue has items
             if (player.Track != null && player.GetQueue().Count > 0 && !player.IsPaused)
             {
-                await SendAndLogMessageAsync(player.GuildId, $"Now playing: {player.Track.Title}");
+                await SendAndLogMessageAsync(player.GuildId, string.Format(ConstMessage.TRACK_PLAYING, 
+                    GeneralHelper.InlineCode(player.Track.Title)));
             }
         }
 
@@ -56,6 +60,8 @@ namespace LKGServiceBot.Audio
             {
                 var players = await _lavaNode.GetPlayersAsync();
                 var player = players.FirstOrDefault(p => p.GuildId == arg.GuildId);
+
+                if (player == null) return;
                 var isLoop = await IsLoopAsync(player.GuildId);
 
                 if (isLoop)
@@ -85,7 +91,8 @@ namespace LKGServiceBot.Audio
             var players = await _lavaNode.GetPlayersAsync();
             var player = players.FirstOrDefault(p => p.GuildId == arg.GuildId);
 
-            await SendAndLogMessageAsync(player.GuildId, $"{arg.Track.Title} throwing an exception. Mssg : {arg.Exception.Message}");
+            if (!string.IsNullOrEmpty(arg.Exception.Message))
+                await SendAndLogMessageAsync(player.GuildId, $"{arg.Track.Title} throwing an exception. Message : {arg.Exception.Message}");
         }
 
         private async Task OnTrackStuck(TrackStuckEventArg arg)
