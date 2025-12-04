@@ -97,6 +97,14 @@ namespace LKGServiceBot
             }
         }
 
+        /// <summary>
+        /// Retrieves the application configuration settings from the "appsettings.json" file.
+        /// </summary>
+        /// <remarks>If the configuration file or section is missing, or if an error occurs during
+        /// loading, this method returns a new <see cref="ConfigSetting"/> instance with default values. Errors
+        /// encountered during loading are logged if error-level logging is enabled.</remarks>
+        /// <returns>A <see cref="ConfigSetting"/> object containing the configuration settings. Returns a new instance with
+        /// default values if the configuration section is missing or an error occurs while reading the file.</returns>
         private ConfigSetting GetConfigSetting()
         {
             try

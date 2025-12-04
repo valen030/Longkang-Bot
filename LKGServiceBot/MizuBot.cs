@@ -78,7 +78,7 @@ namespace LKGServiceBot
 
         private async Task Ready()
         {
-            await _discordClient.SetGameAsync("Helldiver II");
+            await _discordClient.SetGameAsync(_configSetting.GameStatus);
 
             if (!_lavaNode.IsConnected)
             {

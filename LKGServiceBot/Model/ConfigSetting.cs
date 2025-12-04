@@ -4,5 +4,6 @@
     {
         public string DiscordToken { get; set; }
         public char Prefix { get; set; }
+        public string GameStatus { get; set; }
     }
 }

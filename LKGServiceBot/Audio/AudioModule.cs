@@ -528,6 +528,11 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     #region Helper Methods
 
+    /// <summary>
+    /// Check if user is in VoiceChannel and auto join the channel if not connected.
+    /// </summary>
+    /// <param name="autoJoin"></param>
+    /// <returns></returns>
     public async Task<bool> ValidationAsync(bool autoJoin = true)
     {
         // must be in VoiceChannel
@@ -552,6 +557,13 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
         return true;
     }
 
+    /// <summary>
+    /// Searches for a music track that matches the specified query and returns the first result, if found.
+    /// </summary>
+    /// <remarks>If no matching track is found or the search query is invalid, the method returns <see
+    /// langword="null"/> and sends a reply message indicating the issue.</remarks>
+    /// <param name="searchQuery">The search term used to find a track. Cannot be null, empty, or consist only of whitespace.</param>
+    /// <returns>A <see cref="LavaTrack"/> representing the first matching track if found; otherwise, <see langword="null"/>.</returns>
     public async Task<LavaTrack> SearchTrack(string searchQuery)
     {
         if (string.IsNullOrWhiteSpace(searchQuery))
@@ -573,6 +585,15 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
         return searchResponse.Tracks.FirstOrDefault();
     }
 
+    /// <summary>
+    /// Searches for multiple audio tracks that match the specified query and returns the results.
+    /// </summary>
+    /// <remarks>If the search query is invalid or no tracks are found, a notification message is sent and
+    /// <see langword="null"/> is returned. The returned collection contains all tracks found for the given
+    /// query.</remarks>
+    /// <param name="searchQuery">The search term or query used to find matching tracks. Cannot be null, empty, or consist only of whitespace.</param>
+    /// <returns>A read-only collection of <see cref="LavaTrack"/> objects that match the search query; returns <see
+    /// langword="null"/> if no tracks are found or if the query is invalid.</returns>
     public async Task<IReadOnlyCollection<LavaTrack>> SearchMultiTrack(string searchQuery)
     {
         if (string.IsNullOrWhiteSpace(searchQuery))

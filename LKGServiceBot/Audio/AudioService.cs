@@ -39,6 +39,8 @@ namespace LKGServiceBot.Audio
             _lavaNode.OnTrackStart += OnTrackStartAsync;
             _lavaNode.OnTrackException += OnTrackException;
             _lavaNode.OnTrackStuck += OnTrackStuck;
+
+            _socketClient.UserVoiceStateUpdated += UserVoiceStateUpdatedAsync;
         }
 
         private async Task OnTrackStartAsync(TrackStartEventArg arg)
@@ -117,7 +119,7 @@ namespace LKGServiceBot.Audio
 
         private Task OnWebSocketClosedAsync(WebSocketClosedEventArg arg)
         {
-            _logger.LogCritical("{}", JsonSerializer.Serialize(arg));
+            //_logger.LogCritical("{}", JsonSerializer.Serialize(arg));
             return Task.CompletedTask;
         }
 
@@ -135,14 +137,81 @@ namespace LKGServiceBot.Audio
                 .SendMessageAsync(message);
         }
 
+        private async Task UserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState before, SocketVoiceState after)
+        {
+            if (user.IsBot) return;
+
+            // Get guild
+            var guild = before.VoiceChannel?.Guild ?? after.VoiceChannel?.Guild;
+            if (guild == null) return;
+
+            // Get the player
+            var player = await _lavaNode.TryGetPlayerAsync(guild.Id);
+            if (player == null) return;
+
+            // Get bot's current channel
+            var botUser = guild.GetUser(_socketClient.CurrentUser.Id);
+            var botChannel = botUser?.VoiceChannel;
+            if (botChannel == null) return;
+
+            // Check if user left the bot's channel
+            if (before.VoiceChannel?.Id != botChannel.Id) return;
+
+            // Count humans excluding bots and the leaving user
+            int humans = botChannel.Users.Count(u => !u.IsBot && u.Id != user.Id);
+            if (humans > 0)
+            {
+                // Cancel any existing timer
+                if (_disconnectTokens.TryRemove(guild.Id, out var existingCts))
+                    existingCts.Cancel();
+                return;
+            }
+
+            // Start a 1-minute disconnect timer
+            var cts = new CancellationTokenSource();
+
+            if (_disconnectTokens.TryAdd(guild.Id, cts))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(1), cts.Token);
+
+                        // Re-get the bot's current channel after delay
+                        botUser = guild.GetUser(_socketClient.CurrentUser.Id);
+                        botChannel = botUser?.VoiceChannel;
+                        if (botChannel == null) return;
+
+                        // Count humans again
+                        humans = guild.Users
+                            .Where(u => !u.IsBot)
+                            .Count(u => u.VoiceChannel?.Id == botChannel.Id);
+
+                        if (humans == 0)
+                        {
+                            await SendAndLogMessageAsync(player.GuildId, ConstMessage.LEFT_VOICE_CHANNEL);
+                            await _lavaNode.LeaveAsync(botChannel);
+                        }
+                    }
+                    catch (TaskCanceledException) { }
+                    finally
+                    {
+                        _disconnectTokens.TryRemove(guild.Id, out _);
+                    }
+                });
+            }
+        }
+
         #region Loop Management
 
         /// <summary>
-        /// Toggles loop for a guild asynchronously:
-        /// - If no record exists, adds it with true
-        /// - If record exists, toggles its value
-        /// Returns the new state
+        /// Toggles the loop state for the specified guild asynchronously. If the guild does not have a loop state set,
+        /// it is enabled.
         /// </summary>
+        /// <param name="guildId">The unique identifier of the guild for which to toggle the loop state.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if looping is
+        /// enabled after the toggle; otherwise, <see langword="false"/>.</returns>
         public static Task<bool> ToggleLoopAsync(ulong guildId)
         {
             return Task.FromResult(
@@ -155,8 +224,11 @@ namespace LKGServiceBot.Audio
         }
 
         /// <summary>
-        /// Gets current loop state for a guild asynchronously
+        /// Asynchronously determines whether loop mode is enabled for the specified guild.
         /// </summary>
+        /// <param name="guildId">The unique identifier of the guild to check for loop mode status.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains <see langword="true"/> if loop
+        /// mode is enabled for the specified guild; otherwise, <see langword="false"/>.</returns>
         public static Task<bool> IsLoopAsync(ulong guildId)
         {
             return Task.FromResult(GuildLoop.TryGetValue(guildId, out var value) && value);
