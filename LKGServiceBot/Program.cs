@@ -1,9 +1,13 @@
+using System.Net;
+
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
+
 using LKGServiceBot;
 using LKGServiceBot.Audio;
-using System.Net;
+
 using Victoria;
 using Victoria.WebSocket.Internal;
 
@@ -18,6 +22,11 @@ builder.Services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
 // Register Victoria and services
 builder.Services
     .AddSingleton<CommandService>()
+    .AddSingleton(x =>
+    {
+        var client = x.GetRequiredService<DiscordSocketClient>();
+        return new InteractionService(client.Rest);
+    })
     .AddLavaNode(x =>
     {
         x.SelfDeaf = true;

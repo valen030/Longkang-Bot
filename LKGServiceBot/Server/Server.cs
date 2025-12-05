@@ -10,6 +10,17 @@ namespace LKGMusicBot
         private static int _taskID = 0;
         public static bool IsServerForcedToStop = false;
 
+        /// <summary>
+        /// Starts the Lavalink server process and waits until it is ready to accept connections.
+        /// </summary>
+        /// <remarks>The method checks for the presence of the required Lavalink.jar file in the expected
+        /// directory before attempting to start the server. If the file is missing or if cancellation is requested
+        /// before the server is ready, the method returns <see langword="false"/>. The method polls the Lavalink API
+        /// endpoint until it becomes available, indicating that the server is ready to accept requests.</remarks>
+        /// <param name="stoppingToken">A cancellation token that can be used to request cancellation of the startup process before the server is
+        /// ready.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the server
+        /// started successfully and is ready; otherwise, <see langword="false"/>.</returns>
         public static async Task<bool> ServerStartup(CancellationToken stoppingToken)
         {
             var currentDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Server");
@@ -89,6 +100,12 @@ namespace LKGMusicBot
             }
         }
 
+        /// <summary>
+        /// Shuts down the Lavalink server process if it is currently running.
+        /// </summary>
+        /// <remarks>This method attempts to terminate the Lavalink process associated with the current
+        /// task. If the process is not running, no action is taken. Any errors encountered during shutdown are logged
+        /// to the console.</remarks>
         public static void ServerShutdown()
         {
             try
