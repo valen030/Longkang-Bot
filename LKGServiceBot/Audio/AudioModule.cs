@@ -97,7 +97,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
                 }
 
                 if (!string.IsNullOrWhiteSpace(description))
-                    builder.AddField("List Of Commands", description);
+                    builder.AddField(GeneralHelper.Underline("List Of Commands"), description);
             }
 
             await ReplyAsync(embed: builder.Build());

@@ -1,10 +1,14 @@
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using LKGMusicBot;
 using System.Net;
 using System.Net.WebSockets;
 using System.Reflection;
+
+using Discord;
+using Discord.Commands;
+using Discord.Interactions;
+using Discord.WebSocket;
+
+using LKGMusicBot;
+
 using Victoria;
 
 namespace LKGServiceBot
@@ -17,14 +21,16 @@ namespace LKGServiceBot
         private readonly ConfigSetting _configSetting;
         private readonly DiscordSocketClient _discordClient;
         private readonly CommandService _commands;
+        private readonly InteractionService _interactions;
         private readonly LavaNode<LavaPlayer<LavaTrack>, LavaTrack> _lavaNode;
 
-        public Worker(ILogger<Worker> logger, DiscordSocketClient discordClient, CommandService commands, 
+        public Worker(ILogger<Worker> logger, DiscordSocketClient discordClient, CommandService commands, InteractionService interactions,
             IServiceProvider services, LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaNode)
         {
             _logger = logger;
             _discordClient = discordClient;
             _commands = commands;
+            _interactions = interactions;
             _services = services;
             _configSetting = GetConfigSetting();
             _lavaNode = lavaNode;
@@ -51,7 +57,7 @@ namespace LKGServiceBot
                     await _discordClient.StartAsync(); // Startup the client.
                 }
 
-                var bot = new MizuBot(_discordClient, _configSetting, _commands, _services, _lavaNode);
+                var bot = new MizuBot(_discordClient, _configSetting, _commands, _interactions, _services, _lavaNode);
                 await bot.InstallCommands();
 
                 var timer = 1000;
