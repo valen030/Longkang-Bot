@@ -71,6 +71,7 @@ namespace LKGServiceBot
                     await Task.Delay(timer, stoppingToken);
                 }
             }
+            catch { } // bot shutdown
             finally
             {
                 try
