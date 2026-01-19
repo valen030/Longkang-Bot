@@ -72,7 +72,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
             foreach (var module in command.Modules)
             {
-                string description = "";
+                string description = string.Empty;
 
                 foreach (var cmd in module.Commands)
                 {
@@ -114,7 +114,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     [Command("Play")]
     [Alias("p")]
-    [Summary(text: "Play a song.")]
+    [Summary(text: "Play a track.")]
     public async Task PlayAsync([Remainder] string searchQuery)
     {
         try
@@ -142,7 +142,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     [Command("Playlist")]
     [Alias("pl")]
-    [Summary(text: "Play a list of song.")]
+    [Summary(text: "Play a list of track.")]
     public async Task PlayListAsync([Remainder] string searchQuery)
     {
         try
@@ -180,7 +180,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     [Command("Pause")]
     [Alias("pa", "wait")]
-    [Summary(text: "Pause current song.")]
+    [Summary(text: "Pause current track.")]
     public async Task PauseAsync()
     {
         try
@@ -206,7 +206,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     [Command("Resume")]
     [Alias("con", "continue")]
-    [Summary(text: "Resume current song.")]
+    [Summary(text: "Resume current track.")]
     public async Task ResumeAsync()
     {
         try
@@ -256,7 +256,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
 
     [Command("Skip")]
     [Alias("s", "next")]
-    [Summary(text: "Play next song.")]
+    [Summary(text: "Play next track.")]
     public async Task SkipAsync()
     {
         try
@@ -300,8 +300,73 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
         }
     }
 
+    [Command("PlayNext")]
+    [Alias("pn")]
+    [Summary(text: "Play the requested track after current track end.")]
+    public async Task PlayNextAsync([Remainder] string searchQuery)
+    {
+        try
+        {
+            if (!await ValidationAsync()) return;
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            var track = await SearchTrack(searchQuery);
+            if (track == null) return;
+
+            // nothing is playing, play it now
+            if (player.Track == null)
+            {
+                await player.PlayAsync(lavaNode, track);
+                return;
+            }
+
+            if (player.GetQueue().Count == 0)
+            {
+                player.GetQueue().Enqueue(track);
+                await ReplyAsync(string.Format(ConstMessage.TRACK_ADDED_TO_QUEUE_NEXT,
+                    GeneralHelper.InlineCode(track.Title)));
+
+                return;
+            }
+            else
+            {
+                // Make a copy of the current queue
+                var queueSnapshot = player.GetQueue().ToList();
+
+                // Clear the original queue
+                var queue = player.GetQueue();
+                queue.Clear();
+
+                // Add track to first position
+                queue.Enqueue(track);
+
+                // Enqueue all old tracks in the same order
+                foreach (var queueTrack in queueSnapshot)
+                {
+                    if (player.Track == null)
+                    {
+                        await player.PlayAsync(lavaNode, queueTrack);
+                        player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id); // refresh the 
+                    }
+                    else
+                    {
+                        // Add to queue
+                        queue.Enqueue(queueTrack);
+
+                    }
+                }
+
+                await ReplyAsync(string.Format(ConstMessage.TRACK_ADDED_TO_QUEUE_NEXT,
+                    GeneralHelper.InlineCode(track.Title)));
+            }
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.Message);
+        }
+    }
+
     [Command("Now")]
-    [Alias("ct", "current")]
+    [Alias("n", "curr", "current")]
     [Summary(text: "Current track.")]
     public async Task CurrentTrackAsync()
     {
@@ -313,7 +378,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             var track = player.Track;
             if (track != null)
                 await ReplyAsync(string.Format(ConstMessage.TRACK_PLAYING, 
-                    GeneralHelper.InlineCode($"{track.Title} | Duration: {track.Duration}")));
+                    GeneralHelper.InlineCode($"{track.Title} | Duration: ({track.Position}/{track.Duration})")));
             else
                 await ReplyAsync(ConstMessage.TRACK_EMPTY);
         }
@@ -337,6 +402,48 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
             var isLoop = !await AudioService.IsLoopAsync(Context.Guild.Id);
             await AudioService.ToggleLoopAsync(Context.Guild.Id);
             await ReplyAsync(isLoop ? ConstMessage.TRACK_LOOP_ENABLED : ConstMessage.TRACK_LOOP_DISABLED);
+        }
+        catch (Exception exception)
+        {
+            await ReplyAsync(exception.Message);
+        }
+    }
+
+    [Command("Seek")]
+    [Alias("set", "position")]
+    [Summary(text: "Travel to the time stamp in the track (0:23).")]
+    public async Task SeekAsync([Remainder] string input)
+    {
+        try
+        {
+            if (!await ValidationAsync()) return;
+
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            var track = player.Track;
+            if (track == null)
+            {
+                await ReplyAsync(ConstMessage.TRACK_EMPTY);
+                return;
+            }
+
+            if (!GeneralHelper.TryParseFlexibleTime(input, out TimeSpan target))
+            {
+                await ReplyAsync(ConstMessage.TRACK_SEEK_INVALID_FORMAT);
+                return;
+            }
+
+            // invalid range
+            if (target > track.Duration || target < TimeSpan.Zero)
+            {
+                await ReplyAsync(ConstMessage.TRACK_SEEK_INVALID_DURATION);
+                return;
+            }
+
+            if (target == TimeSpan.Zero) // replay
+                target = TimeSpan.FromMilliseconds(1);
+
+            await player.SeekAsync(lavaNode, target);
+            await ReplyAsync(ConstMessage.TRACK_SEEK);
         }
         catch (Exception exception)
         {
@@ -419,35 +526,7 @@ public sealed class AudioModule(LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaN
                 await ReplyAsync(ConstMessage.QUEUE_EMPTY);
             else
             {
-                var queueSnapshot = player.GetQueue().ToList(); // make a local copy
-
-                var rng = new Random();
-                for (int i = queueSnapshot.Count - 1; i > 0; i--)
-                {
-                    int j = rng.Next(i + 1);
-                    (queueSnapshot[i], queueSnapshot[j]) = (queueSnapshot[j], queueSnapshot[i]);
-                }
-
-                // Clear original queue
-                var queue = player.GetQueue();
-                queue.Clear();
-
-                // Put them back in shuffled order
-                foreach (var track in queueSnapshot)
-                {
-                    if (player.Track == null)
-                    {
-                        await player.PlayAsync(lavaNode, track);
-                        player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id); // refresh the 
-                    }
-                    else
-                    {
-                        // Add to queue
-                        queue.Enqueue(track);
-
-                    }
-                }
-
+                player.GetQueue().Shuffle();
                 await ReplyAsync(ConstMessage.QUEUE_SHUFFLED);
             }
         }
