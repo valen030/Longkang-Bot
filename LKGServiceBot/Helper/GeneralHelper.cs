@@ -87,5 +87,48 @@ namespace LKGServiceBot.Helper
         {
             return $"`{text}`";
         }
+
+        /// <summary>
+        /// Attempts to parse a time value from a string in various flexible formats.
+        /// </summary>
+        /// <remarks>If the input is a decimal value less than 1, it is interpreted as hundredths of a
+        /// second (e.g., "0.23" becomes 23 seconds). If the input is an integer, it is interpreted as seconds. Standard
+        /// time formats with colons (such as "mm:ss" or "hh:mm:ss") are also supported.</remarks>
+        /// <param name="input">The input string representing a time value. Supported formats include decimal seconds (e.g., "0.23"),
+        /// integer seconds (e.g., "23"), and colon-separated time (e.g., "mm:ss" or "hh:mm:ss"). Leading and trailing
+        /// whitespace is ignored.</param>
+        /// <param name="result">When this method returns, contains the parsed <see cref="TimeSpan"/> value if parsing succeeded; otherwise,
+        /// <see cref="TimeSpan.Zero"/>.</param>
+        /// <returns>true if the input string was successfully parsed into a <see cref="TimeSpan"/>; otherwise, false.</returns>
+        public static bool TryParseFlexibleTime(string input, out TimeSpan result)
+        {
+            result = TimeSpan.Zero;
+            input = input.Trim();
+
+            // 1. Decimal seconds (e.g., "0.23" is 23 seconds)
+            if (input.Contains('.') && double.TryParse(input, out double dbl))
+            {
+                int minutes = (int)Math.Floor(dbl);
+                int seconds = (int)Math.Round((dbl - minutes) * 100); // take fractional part as seconds
+                result = new TimeSpan(0, 0, minutes * 60 + seconds);
+                return true;
+            }
+
+            // 2. Pure integer seconds (e.g., "23")
+            if (int.TryParse(input, out int sec))
+            {
+                result = TimeSpan.FromSeconds(sec);
+                return true;
+            }
+
+            // 3. Colon-separated mm:ss or hh:mm:ss
+            if (TimeSpan.TryParse(input, out TimeSpan ts))
+            {
+                result = ts;
+                return true;
+            }
+
+            return false; // invalid
+        }
     }
 }

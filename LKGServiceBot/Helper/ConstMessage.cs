@@ -9,11 +9,15 @@
 
         public const string TRACK_NOT_FOUND = "Track not found.";
         public const string TRACK_ADDED_TO_QUEUE = "Track '{0}' added to the queue.";
+        public const string TRACK_ADDED_TO_QUEUE_NEXT = "Track '{0}' added to the queue to play next.";
         public const string TRACK_PAUSED = "Track paused : '{0}'";
         public const string TRACK_RESUMED = "Track is resumed.";
         public const string TRACK_STOPPED = "Track stopped.";
         public const string TRACK_PLAYING = "Now playing: {0}";
         public const string TRACK_EMPTY = "No Track is playing.";
+        public const string TRACK_SEEK = "Current track updated.";
+        public const string TRACK_SEEK_INVALID_FORMAT = "Invalid format. Eg. of 23 seconds format : 0:23, 0.23, 23";
+        public const string TRACK_SEEK_INVALID_DURATION = "Invalid duration. Make sure it was within the track duration.";
 
         public const string TRACK_LOOP_ENABLED = "Loop has been enabled.";
         public const string TRACK_LOOP_DISABLED = "Loop has been disabled.";

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormConfiguration));
             chkboxJava = new CheckBox();
             chkboxYouTube = new CheckBox();
             label1 = new Label();
@@ -43,21 +44,26 @@
             btnCancel = new Button();
             label7 = new Label();
             btnClose = new Button();
-            checkBox1 = new CheckBox();
-            checkBox2 = new CheckBox();
             btnStart = new Button();
             btnStop = new Button();
             lblJavaStatus = new Label();
             lblYouTubeStatus = new Label();
             lblTips = new Label();
             lblServiceStatus = new Label();
+            btnPasteToken = new Button();
+            btnPasteSecret = new Button();
+            edtClientSecret = new TextBox();
+            label6 = new Label();
+            lblInvite = new LinkLabel();
+            label8 = new Label();
+            label9 = new Label();
             SuspendLayout();
             // 
             // chkboxJava
             // 
             chkboxJava.AutoCheck = false;
             chkboxJava.AutoSize = true;
-            chkboxJava.Location = new Point(21, 35);
+            chkboxJava.Location = new Point(21, 36);
             chkboxJava.Name = "chkboxJava";
             chkboxJava.Size = new Size(78, 19);
             chkboxJava.TabIndex = 2;
@@ -68,7 +74,7 @@
             // 
             chkboxYouTube.AutoCheck = false;
             chkboxYouTube.AutoSize = true;
-            chkboxYouTube.Location = new Point(21, 64);
+            chkboxYouTube.Location = new Point(21, 65);
             chkboxYouTube.Name = "chkboxYouTube";
             chkboxYouTube.Size = new Size(134, 19);
             chkboxYouTube.TabIndex = 3;
@@ -79,7 +85,7 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            label1.Location = new Point(7, 10);
+            label1.Location = new Point(7, 11);
             label1.Name = "label1";
             label1.Size = new Size(133, 19);
             label1.TabIndex = 4;
@@ -88,7 +94,7 @@
             // lblVerify
             // 
             lblVerify.AutoSize = true;
-            lblVerify.Location = new Point(312, 86);
+            lblVerify.Location = new Point(312, 87);
             lblVerify.Name = "lblVerify";
             lblVerify.Size = new Size(64, 15);
             lblVerify.TabIndex = 5;
@@ -101,7 +107,7 @@
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            label2.Location = new Point(7, 108);
+            label2.Location = new Point(7, 114);
             label2.Name = "label2";
             label2.Size = new Size(62, 19);
             label2.TabIndex = 6;
@@ -110,7 +116,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(21, 139);
+            label3.Location = new Point(21, 145);
             label3.Name = "label3";
             label3.Size = new Size(59, 15);
             label3.TabIndex = 7;
@@ -119,7 +125,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(300, 171);
+            label4.Location = new Point(301, 204);
             label4.Name = "label4";
             label4.Size = new Size(37, 15);
             label4.TabIndex = 8;
@@ -128,7 +134,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(21, 170);
+            label5.Location = new Point(21, 204);
             label5.Name = "label5";
             label5.Size = new Size(39, 15);
             label5.TabIndex = 9;
@@ -136,14 +142,15 @@
             // 
             // edtBotToken
             // 
-            edtBotToken.Location = new Point(86, 136);
+            edtBotToken.Enabled = false;
+            edtBotToken.Location = new Point(86, 142);
             edtBotToken.Name = "edtBotToken";
-            edtBotToken.Size = new Size(290, 23);
+            edtBotToken.Size = new Size(209, 23);
             edtBotToken.TabIndex = 10;
             // 
             // edtPrefix
             // 
-            edtPrefix.Location = new Point(343, 168);
+            edtPrefix.Location = new Point(343, 201);
             edtPrefix.MaxLength = 1;
             edtPrefix.Name = "edtPrefix";
             edtPrefix.Size = new Size(33, 23);
@@ -151,14 +158,14 @@
             // 
             // edtStatus
             // 
-            edtStatus.Location = new Point(86, 168);
+            edtStatus.Location = new Point(86, 201);
             edtStatus.Name = "edtStatus";
-            edtStatus.Size = new Size(197, 23);
+            edtStatus.Size = new Size(209, 23);
             edtStatus.TabIndex = 12;
             // 
             // btnSave
             // 
-            btnSave.Location = new Point(21, 201);
+            btnSave.Location = new Point(86, 230);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(75, 23);
             btnSave.TabIndex = 13;
@@ -168,7 +175,7 @@
             // 
             // btnCancel
             // 
-            btnCancel.Location = new Point(117, 201);
+            btnCancel.Location = new Point(176, 230);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(75, 23);
             btnCancel.TabIndex = 14;
@@ -180,7 +187,7 @@
             // 
             label7.AutoSize = true;
             label7.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            label7.Location = new Point(7, 255);
+            label7.Location = new Point(7, 275);
             label7.Name = "label7";
             label7.Size = new Size(59, 19);
             label7.TabIndex = 16;
@@ -188,7 +195,7 @@
             // 
             // btnClose
             // 
-            btnClose.Location = new Point(301, 344);
+            btnClose.Location = new Point(301, 381);
             btnClose.Name = "btnClose";
             btnClose.Size = new Size(75, 23);
             btnClose.TabIndex = 17;
@@ -196,31 +203,9 @@
             btnClose.UseVisualStyleBackColor = true;
             btnClose.Click += btnClose_Click;
             // 
-            // checkBox1
-            // 
-            checkBox1.AutoCheck = false;
-            checkBox1.AutoSize = true;
-            checkBox1.Location = new Point(21, 282);
-            checkBox1.Name = "checkBox1";
-            checkBox1.Size = new Size(104, 19);
-            checkBox1.TabIndex = 18;
-            checkBox1.Text = "Lavalink Server";
-            checkBox1.UseVisualStyleBackColor = true;
-            // 
-            // checkBox2
-            // 
-            checkBox2.AutoCheck = false;
-            checkBox2.AutoSize = true;
-            checkBox2.Location = new Point(21, 307);
-            checkBox2.Name = "checkBox2";
-            checkBox2.Size = new Size(79, 19);
-            checkBox2.TabIndex = 19;
-            checkBox2.Text = "Music Bot";
-            checkBox2.UseVisualStyleBackColor = true;
-            // 
             // btnStart
             // 
-            btnStart.Location = new Point(21, 335);
+            btnStart.Location = new Point(21, 358);
             btnStart.Name = "btnStart";
             btnStart.Size = new Size(75, 23);
             btnStart.TabIndex = 20;
@@ -230,7 +215,7 @@
             // 
             // btnStop
             // 
-            btnStop.Location = new Point(117, 335);
+            btnStop.Location = new Point(112, 358);
             btnStop.Name = "btnStop";
             btnStop.Size = new Size(75, 23);
             btnStop.TabIndex = 21;
@@ -241,7 +226,7 @@
             // lblJavaStatus
             // 
             lblJavaStatus.AutoSize = true;
-            lblJavaStatus.Location = new Point(99, 36);
+            lblJavaStatus.Location = new Point(99, 37);
             lblJavaStatus.Name = "lblJavaStatus";
             lblJavaStatus.Size = new Size(47, 15);
             lblJavaStatus.TabIndex = 22;
@@ -250,17 +235,18 @@
             // lblYouTubeStatus
             // 
             lblYouTubeStatus.AutoSize = true;
-            lblYouTubeStatus.Location = new Point(39, 86);
+            lblYouTubeStatus.Location = new Point(39, 87);
             lblYouTubeStatus.Name = "lblYouTubeStatus";
-            lblYouTubeStatus.Size = new Size(210, 15);
+            lblYouTubeStatus.Size = new Size(240, 15);
             lblYouTubeStatus.TabIndex = 23;
-            lblYouTubeStatus.Text = "(Code: WWW-WWW-WWW) - Copied!";
+            lblYouTubeStatus.Text = "(Code: WWW-WWW-WWW) - Click to Copy";
+            lblYouTubeStatus.Click += lblYouTubeStatus_Click;
             // 
             // lblTips
             // 
             lblTips.AutoSize = true;
             lblTips.Font = new Font("Segoe UI", 8F);
-            lblTips.Location = new Point(152, 66);
+            lblTips.Location = new Point(152, 67);
             lblTips.Name = "lblTips";
             lblTips.Size = new Size(228, 13);
             lblTips.TabIndex = 24;
@@ -270,26 +256,97 @@
             // lblServiceStatus
             // 
             lblServiceStatus.AutoSize = true;
-            lblServiceStatus.Location = new Point(71, 258);
+            lblServiceStatus.Location = new Point(86, 303);
             lblServiceStatus.Name = "lblServiceStatus";
             lblServiceStatus.Size = new Size(47, 15);
             lblServiceStatus.TabIndex = 25;
             lblServiceStatus.Text = "(Status)";
+            // 
+            // btnPasteToken
+            // 
+            btnPasteToken.Location = new Point(301, 142);
+            btnPasteToken.Name = "btnPasteToken";
+            btnPasteToken.Size = new Size(75, 23);
+            btnPasteToken.TabIndex = 26;
+            btnPasteToken.Text = "Paste";
+            btnPasteToken.UseVisualStyleBackColor = true;
+            btnPasteToken.Click += btnPasteToken_Click;
+            // 
+            // btnPasteSecret
+            // 
+            btnPasteSecret.Location = new Point(301, 171);
+            btnPasteSecret.Name = "btnPasteSecret";
+            btnPasteSecret.Size = new Size(75, 23);
+            btnPasteSecret.TabIndex = 29;
+            btnPasteSecret.Text = "Paste";
+            btnPasteSecret.UseVisualStyleBackColor = true;
+            btnPasteSecret.Click += btnPasteSecret_Click;
+            // 
+            // edtClientSecret
+            // 
+            edtClientSecret.Enabled = false;
+            edtClientSecret.Location = new Point(86, 171);
+            edtClientSecret.Name = "edtClientSecret";
+            edtClientSecret.Size = new Size(209, 23);
+            edtClientSecret.TabIndex = 28;
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new Point(21, 174);
+            label6.Name = "label6";
+            label6.Size = new Size(43, 15);
+            label6.TabIndex = 27;
+            label6.Text = "App ID";
+            // 
+            // lblInvite
+            // 
+            lblInvite.AutoSize = true;
+            lblInvite.Location = new Point(86, 328);
+            lblInvite.Name = "lblInvite";
+            lblInvite.Size = new Size(85, 15);
+            lblInvite.TabIndex = 30;
+            lblInvite.TabStop = true;
+            lblInvite.Text = "Invite to Server";
+            lblInvite.LinkClicked += lblInvite_LinkClicked;
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Location = new Point(21, 303);
+            label8.Name = "label8";
+            label8.Size = new Size(48, 15);
+            label8.TabIndex = 31;
+            label8.Text = "Status : ";
+            // 
+            // label9
+            // 
+            label9.AutoSize = true;
+            label9.Location = new Point(21, 328);
+            label9.Name = "label9";
+            label9.Size = new Size(31, 15);
+            label9.TabIndex = 32;
+            label9.Text = "Bot :";
             // 
             // FormConfiguration
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             CancelButton = btnClose;
-            ClientSize = new Size(388, 375);
+            ClientSize = new Size(388, 416);
+            Controls.Add(label9);
+            Controls.Add(label8);
+            Controls.Add(lblInvite);
+            Controls.Add(btnPasteSecret);
+            Controls.Add(edtClientSecret);
+            Controls.Add(label6);
+            Controls.Add(btnPasteToken);
             Controls.Add(lblServiceStatus);
             Controls.Add(lblTips);
             Controls.Add(lblYouTubeStatus);
             Controls.Add(lblJavaStatus);
             Controls.Add(btnStop);
             Controls.Add(btnStart);
-            Controls.Add(checkBox2);
-            Controls.Add(checkBox1);
             Controls.Add(btnClose);
             Controls.Add(label7);
             Controls.Add(btnCancel);
@@ -305,11 +362,15 @@
             Controls.Add(label1);
             Controls.Add(chkboxYouTube);
             Controls.Add(chkboxJava);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            HelpButton = true;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "FormConfiguration";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Music Bot Configuration";
+            HelpButtonClicked += FormConfiguration_HelpButtonClicked;
             Load += FormConfiguration_Load;
             ResumeLayout(false);
             PerformLayout();
@@ -331,13 +392,18 @@
         private Button btnCancel;
         private Label label7;
         private Button btnClose;
-        private CheckBox checkBox1;
-        private CheckBox checkBox2;
         private Button btnStart;
         private Button btnStop;
         private Label lblJavaStatus;
         private Label lblYouTubeStatus;
         private Label lblTips;
         private Label lblServiceStatus;
+        private Button btnPasteToken;
+        private Button btnPasteSecret;
+        private TextBox edtClientSecret;
+        private Label label6;
+        private LinkLabel lblInvite;
+        private Label label8;
+        private Label label9;
     }
 }

@@ -1,5 +1,7 @@
 using System.Diagnostics;
-using System.ServiceProcess;
+using System.Text.RegularExpressions;
+
+using LKGBotConfiguration.Helper;
 
 using LKGServiceBot;
 
@@ -62,7 +64,7 @@ namespace LKGBotConfiguration
                                 // Update the UI safely
                                 this.Invoke(() =>
                                 {
-                                    UpdateYouTubeStatus(code);
+                                    UpdateYouTubeStatus(code, true);
                                     Clipboard.SetText(code);
                                     lblVerify.Visible = true;
                                 });
@@ -76,7 +78,7 @@ namespace LKGBotConfiguration
                         verified = _youtubeHelper.CheckYoutubeRefreshToken();
                         UpdateYouTubeUI(verified);
 
-                        _youtubeHelper.StopWorkerService();
+                        ServiceHelper.StopWorkerService();
                     });
                 }
             }
@@ -97,7 +99,7 @@ namespace LKGBotConfiguration
             if (!verified)
             {
                 lblTips.Visible = true;
-                UpdateYouTubeStatus("Loading...");
+                UpdateYouTubeStatus("Loading...", false);
                 chkboxYouTube.Checked = false;
             }
             else
@@ -107,15 +109,15 @@ namespace LKGBotConfiguration
             }
         }
 
-        private void UpdateYouTubeStatus(string code)
+        private void UpdateYouTubeStatus(string code, bool canCopy)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action<string>(UpdateYouTubeStatus), code);
+                this.Invoke(new Action<string, bool>(UpdateYouTubeStatus), code, canCopy);
                 return;
             }
 
-            lblYouTubeStatus.Text = $"(Code : {code}) - Copied!";
+            lblYouTubeStatus.Text = $"(Code : {code})" + (canCopy ? " - Click to Copy" : string.Empty);
         }
 
         private void UpdateServiceStatus(string status)
@@ -136,6 +138,7 @@ namespace LKGBotConfiguration
             edtBotToken.Text = _configSettings.DiscordToken;
             edtPrefix.Text = _configSettings.Prefix.ToString();
             edtStatus.Text = _configSettings.GameStatus;
+            edtClientSecret.Text = _configSettings.ClientID;
         }
 
         private async void FormConfiguration_Load(object sender, EventArgs e)
@@ -144,7 +147,7 @@ namespace LKGBotConfiguration
             await YouTubeVerificationAsync();
 
             if (chkboxJava.Checked && chkboxYouTube.Checked)
-                UpdateServiceStatus(_youtubeHelper.IsWorkerRunning() ? "Running" : "Stopped");
+                UpdateServiceStatus(ServiceHelper.IsWorkerRunning() ? "Running" : "Stopped");
 
             LoadSettings();
         }
@@ -165,16 +168,16 @@ namespace LKGBotConfiguration
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            if (!_youtubeHelper.IsWorkerRunning())
-                _youtubeHelper.StartWorkerService();
+            if (!ServiceHelper.IsWorkerRunning())
+                ServiceHelper.StartWorkerService(_workerFolder);
 
             UpdateServiceStatus("Running");
         }
 
         private void btnStop_Click(object sender, EventArgs e)
         {
-            if (_youtubeHelper.IsWorkerRunning())
-                _youtubeHelper.StopWorkerService();
+            if (ServiceHelper.IsWorkerRunning())
+                ServiceHelper.StopWorkerService();
 
             UpdateServiceStatus("Stopped");
         }
@@ -182,6 +185,7 @@ namespace LKGBotConfiguration
         private void btnSave_Click(object sender, EventArgs e)
         {
             _configSettings.DiscordToken = edtBotToken.Text;
+            _configSettings.ClientID = edtClientSecret.Text;
             _configSettings.GameStatus = edtStatus.Text;
 
             if (!string.IsNullOrEmpty(edtPrefix.Text))
@@ -201,6 +205,64 @@ namespace LKGBotConfiguration
         private void btnCancel_Click(object sender, EventArgs e)
         {
             LoadSettings();
+        }
+
+        private void lblYouTubeStatus_Click(object sender, EventArgs e)
+        {
+            var match = Regex.Match(lblJavaStatus.Text, @"Code\s*:\s*(.*?)\)");
+            if (match.Success)
+            {
+                string code = match.Groups[1].Value.Trim();
+                Clipboard.SetText(code);
+            }
+        }
+
+        private void lblInvite_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            var clientID = edtClientSecret.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(clientID))
+            {
+                MessageBox.Show("Application ID is empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var url = string.Format(Const.DiscordInviteURL, Uri.EscapeDataString(clientID));
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+
+        private void btnPasteToken_Click(object sender, EventArgs e)
+        {
+            if (!Clipboard.ContainsText()) return;
+
+            var clipboardText = Clipboard.GetText().Trim();
+            if (string.IsNullOrWhiteSpace(clipboardText) || clipboardText.Length > 200) return;
+
+            edtBotToken.Text = clipboardText;
+        }
+
+        private void btnPasteSecret_Click(object sender, EventArgs e)
+        {
+            if (!Clipboard.ContainsText()) return;
+
+            var clipboardText = Clipboard.GetText().Trim();
+            if (string.IsNullOrWhiteSpace(clipboardText) || clipboardText.Length > 200) return;
+
+            edtClientSecret.Text = clipboardText;
+        }
+
+        private void FormConfiguration_HelpButtonClicked(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // Open the URL in the default browser
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = Const.HelpURL,
+                UseShellExecute = true
+            });
         }
     }
 }
