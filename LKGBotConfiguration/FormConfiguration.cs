@@ -209,7 +209,7 @@ namespace LKGBotConfiguration
 
         private void lblYouTubeStatus_Click(object sender, EventArgs e)
         {
-            var match = Regex.Match(lblJavaStatus.Text, @"Code\s*:\s*(.*?)\)");
+            var match = Regex.Match(lblYouTubeStatus.Text, @"Code\s*:\s*(.*?)\)");
             if (match.Success)
             {
                 string code = match.Groups[1].Value.Trim();
