@@ -160,7 +160,7 @@ plugins:
         enabled: true
         oauth:
             enabled: true
-            refreshToken:
+            refreshToken: 
             skipInitialization: false
 
 logging:
