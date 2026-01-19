@@ -8,6 +8,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Resources\Random.ico</ApplicationIcon>
+    <Authors>valen030</Authors>
+    <Company>valen030</Company>
+    <Product>LKGBotConfiguration</Product>
+    <Description>A simple win app for configuring the music bot.</Description>
+    <Copyright>Copyright (c) 2026 valen030</Copyright>
+    <PackageIcon>Random128.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/valen030/Longkang-Bot</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +35,17 @@
 
 	<ItemGroup>
 	  <Content Include="Resources\Random.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\LKGServiceBot\Random128.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	  <None Include="..\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 </Project>
