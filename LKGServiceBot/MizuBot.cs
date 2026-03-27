@@ -85,11 +85,13 @@ namespace LKGServiceBot
             // Create a Command Context
             var context = new SocketCommandContext(_discordClient, message);
 
-            // Execute the command. (result does not indicate a return value, 
-            // rather an object stating if the command executed successfully)
-            var result = await _commands.ExecuteAsync(context, argPos, _services);
-            if (!result.IsSuccess) // If failed, write error to chat.
-                await context.Channel.SendMessageAsync(result.ErrorReason);
+            // Execute the command on a background thread to avoid blocking the gateway task
+            _ = Task.Run(async () =>
+            {
+                var result = await _commands.ExecuteAsync(context, argPos, _services);
+                if (!result.IsSuccess)
+                    await context.Channel.SendMessageAsync(result.ErrorReason);
+            });
         }
 
         private async Task Ready()

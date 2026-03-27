@@ -42,7 +42,10 @@
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="3.18.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <PackageReference Include="Victoria" Version="7.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Victoria\src\Victoria.csproj" />
   </ItemGroup>
 
   <ItemGroup>
