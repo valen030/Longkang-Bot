@@ -49,7 +49,7 @@ namespace LKGServiceBot.Audio
             var player = players.FirstOrDefault(p => p.GuildId == arg.GuildId);
 
             // if nothing is playing but queue has items
-            if (player.Track != null && player.GetQueue().Count > 0 && !player.IsPaused)
+            if (player.Track != null && !player.IsPaused)
             {
                 await SendAndLogMessageAsync(player.GuildId, string.Format(ConstMessage.TRACK_PLAYING, 
                     GeneralHelper.InlineCode(player.Track.Title)));
